@@ -1,0 +1,27 @@
+services:
+  # Python AI Service
+  - type: web
+    name: predixa-ai-model
+    env: python
+    rootDir: ai-model/explainability-service
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port 10000
+    plan: free
+    healthCheckPath: /
+
+  # Node Backend
+  - type: web
+    name: predixa-backend
+    env: node
+    rootDir: backend
+    buildCommand: npm install && npx tsc
+    startCommand: node dist/server.js
+    plan: free
+    envVars:
+      - key: FASTAPI_URL
+        fromService:
+          type: web
+          name: predixa-ai-model
+          envVarKey: RENDER_EXTERNAL_URL
+      # Note: For MONGODB_URI, you must manually add it in the Render dashboard
+      # after creating your free MongoDB Atlas cluster.

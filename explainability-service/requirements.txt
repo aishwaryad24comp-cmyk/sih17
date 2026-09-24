@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+pandas
+numpy
+scikit-learn
+catboost==1.2.10
+shap
+joblib==1.4.2
+pydantic

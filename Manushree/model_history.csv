@@ -1,0 +1,4 @@
+model_version,records_used,accuracy,precision,recall,f1_score,model_path,model_type,features_used,roc_auc
+20260905_152936,850,0.8882,0.8421,0.8276,0.8348,models\land_delay_classifier_20260905_152936.pkl,,,
+20260905_181910,850,0.9118,0.8909,0.8448,0.8673,C:\Users\islocal\Desktop\code SIH\sih26017\Manushree\models\land_delay_classifier_20260905_181910.pkl,CatBoostClassifier,17.0,0.9443
+20260905_182304,850,0.9118,0.8909,0.8448,0.8673,C:\Users\islocal\Desktop\code SIH\sih26017\Manushree\models\land_delay_classifier_20260905_182304.pkl,CatBoostClassifier,17.0,0.9443

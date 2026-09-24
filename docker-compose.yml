@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  # ---------------------------------------------------------
+  # React Frontend (Vite + Nginx)
+  # ---------------------------------------------------------
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # ---------------------------------------------------------
+  # Node.js API (Express)
+  # ---------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./backend/.env
+    environment:
+      # Tell the Node backend to proxy AI requests to the internal Docker network name
+      - FASTAPI_URL=http://ai-model:8000
+    depends_on:
+      - ai-model
+    restart: unless-stopped
+
+  # ---------------------------------------------------------
+  # Python AI Service (FastAPI)
+  # ---------------------------------------------------------
+  ai-model:
+    build:
+      # Build context is the root directory so we can copy ../Manushree models
+      context: .
+      dockerfile: ai-model/explainability-service/Dockerfile
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+# Note: MongoDB and Redis are not included in this docker-compose file because 
+# the backend is configured via ./backend/.env to connect to external managed 
+# instances (MongoDB Atlas and Upstash Redis). This is standard best practice 
+# for cloud deployments on AWS / NIC Cloud.
