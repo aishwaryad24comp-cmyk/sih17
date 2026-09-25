@@ -38,6 +38,11 @@ io.on('connection', (socket) => {
   });
 });
 
+// Health check endpoint for cloud platforms (Render/Vercel)
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', dbState: mongoose.connection.readyState });
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
@@ -46,30 +51,38 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/audit', auditRoutes);
 app.use('/api/notifications', notificationRoutes);
 
-// Database connection
-mongoose.connect(MONGODB_URI)
+// Always start HTTP server immediately so Render port binding succeeds
+httpServer.listen(PORT, () => {
+  console.log(`Server & Socket.io are running on port ${PORT}`);
+});
+
+// Connect to MongoDB with IPv4 resolution (family: 4) to avoid SRV DNS issues on cloud hosts
+mongoose.connect(MONGODB_URI, {
+  family: 4
+})
   .then(async () => {
     console.log('Connected to MongoDB');
     
-    // Seed default admin if no users exist
-    const userCount = await User.countDocuments();
-    if (userCount === 0) {
-      console.log('No users found in database. Creating default admin account...');
-      const salt = await bcrypt.genSalt(10);
-      const passwordHash = await bcrypt.hash('password123', salt);
-      await User.create({
-        username: 'admin',
-        passwordHash,
-        role: 'Admin',
-        email: 'admin@predixa.local'
-      });
-      console.log('Default Admin created! Username: admin | Password: password123');
+    try {
+      // Seed default admin if no users exist
+      const userCount = await User.countDocuments();
+      if (userCount === 0) {
+        console.log('No users found in database. Creating default admin account...');
+        const salt = await bcrypt.genSalt(10);
+        const passwordHash = await bcrypt.hash('password123', salt);
+        await User.create({
+          username: 'admin',
+          passwordHash,
+          role: 'Admin',
+          email: 'admin@predixa.local'
+        });
+        console.log('Default Admin created! Username: admin | Password: password123');
+      }
+    } catch (err: any) {
+      console.error('Error during database initialization:', err.message);
     }
 
     startAlertEngine();
-    httpServer.listen(PORT, () => {
-      console.log(`Server & Socket.io are running on port ${PORT}`);
-    });
   })
   .catch((error) => {
     console.error('Error connecting to MongoDB:', error.message);
